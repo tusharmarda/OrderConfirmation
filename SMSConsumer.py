@@ -25,6 +25,10 @@ class SMSListener:
         customerEmail = 'abc@def.com'
         return sentSMS, sentMail, sentInvoice, customerName, customerSMS, customerEmail
 
+    def updateDB(self, OrderId):
+        time.sleep(1)
+        print('Updated in DB that SMS is sent')
+
     def CallSMSServiceProviderAPI(self, MobileNo, Content):
         time.sleep(1)
         r = random.randint(0, 1000)
@@ -52,4 +56,6 @@ class SMSListener:
             SentSMS = CallSMSServiceProviderAPI(CustomerSMS, SMSContent)
         if SentSMS == 0:
             qSMS.append(qMessage)
+        else:
+            updateDB(OrderId)
         ack(qMessage)
