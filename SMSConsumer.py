@@ -3,29 +3,14 @@ import time
 import json
 import random
 
-qSMS = deque([])
-qInvoice = deque([])
-qEmail = deque([])
-
-class EmailListener:
-    qEmail = deque([])
-    def __init__(self, emailQ):
-        self.qEmail = emailQ
-
-class InvoiceListener:
-    qInvoice = deque([])
-    def __init__(self, invoiceQ):
-        self.qInvoice = invoiceQ
-
 class SMSListener:
-    emptyQ = 0
     def __init__(self, smsQ, invoiceQ):
         self.qSMS = smsQ
         self.qInvoice = invoiceQ
 
     def listen(self):
         if qSMS:
-            process(qSMS.pop())
+            process(qSMS[len(qSMS) - 1])
 
     def queryDB(self, OrderId):
         time.sleep(1)
@@ -49,6 +34,9 @@ class SMSListener:
         print('SMS sent')
         return 1
 
+    def ack(self, qMessage):
+        qSMS.pop()
+
     def process(self, qMessage):
         orderDetails = json.loads(qMessage)
         OrderId = orderDetails['OrderId']
@@ -64,3 +52,4 @@ class SMSListener:
             SentSMS = CallSMSServiceProviderAPI(CustomerSMS, SMSContent)
         if SentSMS == 0:
             qSMS.append(qMessage)
+        ack(qMessage)
