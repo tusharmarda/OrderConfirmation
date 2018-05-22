@@ -11,7 +11,7 @@ class EmailListener:
 
     def listen(self):
         if self.qEmail:
-            process(self.qEmail[len(self.qEmail) - 1])
+            self.process(self.qEmail[len(self.qEmail) - 1])
 
     def CallEmailServiceProviderAPI(self, EmailTo, EmailCc, EmailBcc, Subject, Content, Attachment):
         time.sleep(1)
@@ -49,10 +49,10 @@ class EmailListener:
         if 'Attachment' in emailDetails:
             attachment = emailDetails['Attachment']
             if attachment is not None:
-                attachmentFile = getAttachment(attachment)
-        SentEmail = CallEmailServiceProviderAPI(emailTo, emailCc, emailBcc, subject, content, attachmentFile)
+                attachmentFile = self.getAttachment(attachment)
+        SentEmail = self.CallEmailServiceProviderAPI(emailTo, emailCc, emailBcc, subject, content, attachmentFile)
         if SentEmail == 0:
             self.qEmail.append(qMessage)
         elif attachmentFile is not None:
-            deleteFile(attachmentFile)
-        ack(qMessage)
+            self.deleteFile(attachmentFile)
+        self.ack(qMessage)
