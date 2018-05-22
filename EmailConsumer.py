@@ -10,8 +10,8 @@ class EmailListener:
 
 
     def listen(self):
-        if qEmail:
-            process(qEmail[len(qEmail) - 1])
+        if self.qEmail:
+            process(self.qEmail[len(self.qEmail) - 1])
 
     def CallEmailServiceProviderAPI(self, EmailTo, EmailCc, EmailBcc, Subject, Content, Attachment):
         time.sleep(1)
@@ -32,27 +32,27 @@ class EmailListener:
         print('Attachment file deleted')
 
     def ack(self, qMessage):
-        qEmail.pop()
+        self.qEmail.pop()
 
     def process(self, qMessage):
         emailDetails = json.loads(qMessage)
         subject = emailDetails['Subject']
         content = emailDetails['Content']
-	emailTo = emailDetails['EmailTo']
-	emailCc = ''
-	if 'EmailCc' in emailDetails:
+        emailTo = emailDetails['EmailTo']
+        emailCc = ''
+        if 'EmailCc' in emailDetails:
             emailCc = emailDetails['EmailCc']
-	emailBcc = ''
-	if 'EmailBcc' in emailDetails:
+        emailBcc = ''
+        if 'EmailBcc' in emailDetails:
             emailBcc = emailDetails['EmailBcc']
-	attachmentFile = None
-	if 'Attachment' in emailDetails:
+        attachmentFile = None
+        if 'Attachment' in emailDetails:
             attachment = emailDetails['Attachment']
             if attachment is not None:
                 attachmentFile = getAttachment(attachment)
         SentEmail = CallEmailServiceProviderAPI(emailTo, emailCc, emailBcc, subject, content, attachmentFile)
         if SentEmail == 0:
-            qEmail.append(qMessage)
+            self.qEmail.append(qMessage)
         elif attachmentFile is not None:
             deleteFile(attachmentFile)
         ack(qMessage)

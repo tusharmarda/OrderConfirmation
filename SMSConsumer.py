@@ -9,8 +9,8 @@ class SMSListener:
         self.qInvoice = invoiceQ
 
     def listen(self):
-        if qSMS:
-            process(qSMS[len(qSMS) - 1])
+        if self.qSMS:
+            process(self.qSMS[len(self.qSMS) - 1])
 
     def queryDB(self, OrderId):
         time.sleep(1)
@@ -39,7 +39,7 @@ class SMSListener:
         return 1
 
     def ack(self, qMessage):
-        qSMS.pop()
+        self.qSMS.pop()
 
     def process(self, qMessage):
         orderDetails = json.loads(qMessage)
@@ -50,12 +50,12 @@ class SMSListener:
             orderDetails['SentMail'] = SentMail
             orderDetails['CustomerName'] = CustomerName
             orderDetails['CustomerEmail'] = CustomerEmail
-            qInvoice.append(json.dumps(orderDetails))
+            self.qInvoice.append(json.dumps(orderDetails))
         if SentSMS == 0:
             SMSContent = 'Dear ' + CustomerName + ', your Order with order id ' + OrderId + ' has been successfully placed.'
             SentSMS = CallSMSServiceProviderAPI(CustomerSMS, SMSContent)
         if SentSMS == 0:
-            qSMS.append(qMessage)
+            self.qSMS.append(qMessage)
         else:
             updateDB(OrderId)
         ack(qMessage)

@@ -9,8 +9,8 @@ class InvoiceListener:
         self.qEmail = emailQ
 
     def listen(self):
-        if qInvoice:
-            process(qInvoice[len(qInvoice) - 1])
+        if self.qInvoice:
+            process(self.qInvoice[len(self.qInvoice) - 1])
 
     def queryDB(self, OrderId):
         time.sleep(1)
@@ -24,7 +24,7 @@ class InvoiceListener:
         invoiceDetails = {'Order No': OrderId, 'Invoice No': random.randint(1, 10000), 'Name': customerName, 'Items':['Item A', 'Item B'], 'Total': (100 * random.randint(1, 100))}
         return sentMail, sentInvoice, customerName, customerEmail, invoiceDetails
 
-    def TryCreateInvoice(InvoiceDetails):
+    def TryCreateInvoice(self, InvoiceDetails):
         time.sleep(1)
         InvoiceDetailsPath = 'Path of Invoice File created'
         r = random.randint(0, 1000)
@@ -33,7 +33,7 @@ class InvoiceListener:
         return InvoiceDetailsPath
 
     def ack(self, qMessage):
-        qInvoice.pop()
+        self.qInvoice.pop()
 
     def process(self, qMessage):
         orderDetails = json.loads(qMessage)
@@ -49,12 +49,12 @@ class InvoiceListener:
             emailMessage = {'EmailTo': CustomerEmail, 'Subject': 'Your order with Meesho', 'Content': MailContent}
             if Invoice is not None:
                 emailMessage['Attachment'] = Invoice
-                qEmail.append(json.dumps(emailMessage))
+                self.qEmail.append(json.dumps(emailMessage))
                 SentInvoice = 1
                 SentMail = 1
             elif SentMail == 0:
-                qEmail.append(json.dumps(emailMessage))
+                self.qEmail.append(json.dumps(emailMessage))
                 SentMail = 1
         if SentInvoice == 0:
-            qInvoice.append(json.dumps(orderDetails))
+            self.qInvoice.append(json.dumps(orderDetails))
         ack(qMessage)
