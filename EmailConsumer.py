@@ -1,4 +1,4 @@
-from collections import deque
+from MessageQ import MessageQ
 import time
 import json
 import random
@@ -10,8 +10,9 @@ class EmailListener:
 
 
     def listen(self):
-        if self.qEmail:
-            self.process(self.qEmail[len(self.qEmail) - 1])
+        qMessage = self.qEmail.getMessage()
+        if qMessage is not None:
+            self.process(qMessage)
 
     def CallEmailServiceProviderAPI(self, EmailTo, EmailCc, EmailBcc, Subject, Content, Attachment):
         time.sleep(1)
@@ -31,9 +32,6 @@ class EmailListener:
         time.sleep(0.2)
         print('Attachment file deleted')
 
-    def ack(self, qMessage):
-        self.qEmail.pop()
-
     def process(self, qMessage):
         emailDetails = json.loads(qMessage)
         subject = emailDetails['Subject']
@@ -52,7 +50,7 @@ class EmailListener:
                 attachmentFile = self.getAttachment(attachment)
         SentEmail = self.CallEmailServiceProviderAPI(emailTo, emailCc, emailBcc, subject, content, attachmentFile)
         if SentEmail == 0:
-            self.qEmail.append(qMessage)
+            self.qEmail.enqueue(qMessage)
         elif attachmentFile is not None:
             self.deleteFile(attachmentFile)
-        self.ack(qMessage)
+        self.qEmail.ack(qMessage)

@@ -1,4 +1,4 @@
-from collections import deque
+from MessageQ import MessageQ
 import time
 import json
 import random
@@ -9,12 +9,13 @@ class SMSListener:
         self.qInvoice = invoiceQ
 
     def listen(self):
-        if self.qSMS:
-            self.process(self.qSMS[len(self.qSMS) - 1])
+        qMessage = self.qSMS.getMessage()
+        if qMessage is not None:
+            self.process(qMessage)
 
     def queryDB(self, OrderId):
         time.sleep(1)
-        print('Querying DB')
+        print('Querying DB for SMS of order', OrderId)
         sentSMS = random.randint(0, 1)
         sentInvoice = random.randint(0, 1)
         sentMail = 1
@@ -23,11 +24,11 @@ class SMSListener:
         customerName = 'abc'
         customerSMS = '1234567890'
         customerEmail = 'abc@def.com'
-        return sentSMS, sentMail, sentInvoice, customerName, customerSMS, customerEmail
+        return sentSMS, sentInvoice, customerName, customerSMS
 
     def updateDB(self, OrderId):
         time.sleep(1)
-        print('Updated in DB that SMS is sent')
+        print('Updated in DB that SMS is sent for order', OrderId)
 
     def CallSMSServiceProviderAPI(self, MobileNo, Content):
         time.sleep(1)
@@ -38,24 +39,19 @@ class SMSListener:
         print('SMS sent')
         return 1
 
-    def ack(self, qMessage):
-        self.qSMS.pop()
-
     def process(self, qMessage):
         orderDetails = json.loads(qMessage)
         OrderId = orderDetails['OrderId']
-        SentSMS, SentMail, SentInvoice, CustomerName, CustomerSMS, CustomerEmail = self.queryDB(OrderId)
+        SentSMS, SentInvoice, CustomerName, CustomerSMS = self.queryDB(OrderId)
         if SentInvoice == 0:
-            orderDetails['SentInvoice'] = SentInvoice
-            orderDetails['SentMail'] = SentMail
-            orderDetails['CustomerName'] = CustomerName
-            orderDetails['CustomerEmail'] = CustomerEmail
-            self.qInvoice.append(json.dumps(orderDetails))
+            self.qInvoice.enqueue(json.dumps(orderDetails))
+        else:
+            print('Invoice for order', OrderId, 'is sent')
         if SentSMS == 0:
             SMSContent = 'Dear ' + CustomerName + ', your Order with order id ' + OrderId + ' has been successfully placed.'
             SentSMS = self.CallSMSServiceProviderAPI(CustomerSMS, SMSContent)
         if SentSMS == 0:
-            self.qSMS.append(qMessage)
+            self.qSMS.enqueue(qMessage)
         else:
             self.updateDB(OrderId)
-        self.ack(qMessage)
+        self.qSMS.ack(qMessage)

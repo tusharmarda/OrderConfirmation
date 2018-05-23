@@ -1,23 +1,23 @@
-import SMSConsumer
-import InvoiceConsumer
-import EmailConsumer
+from SMSConsumer import SMSListener
+from InvoiceConsumer import InvoiceListener
+from EmailConsumer import EmailListener
 from collections import deque
+from MessageQ import MessageQ
 import json
 
 
 
 
-SmsQ = deque([])
-InvoiceQ = deque([])
-EmailQ = deque([])
+SmsQ = MessageQ(deque([]))
+InvoiceQ = MessageQ(deque([]))
+EmailQ = MessageQ(deque([]))
+
+SmsC = SMSListener(SmsQ, InvoiceQ)
+InvoiceC = InvoiceListener(InvoiceQ, EmailQ)
+EmailC = EmailListener(EmailQ)
 
 for i in range(100):
-    SmsQ.append(json.dumps({'OrderId':('meesho' + str(i))}))
-
-SmsC = SMSConsumer.SMSListener(SmsQ, InvoiceQ)
-InvoiceC = InvoiceConsumer.InvoiceListener(InvoiceQ, EmailQ)
-EmailC = EmailConsumer.EmailListener(EmailQ)
-
-SmsC.listen()
-InvoiceC.listen()
-EmailC.listen()
+    SmsQ.enqueue(json.dumps({'OrderId':('meesho' + str(i))}))
+    SmsC.listen()
+    InvoiceC.listen()
+    EmailC.listen()
