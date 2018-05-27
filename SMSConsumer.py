@@ -4,33 +4,10 @@ import json
 import random
 
 class SMSListener:
-    def __init__(self, smsQ, invoiceQ):
-        self.qSMS = smsQ
-        self.qInvoice = invoiceQ
+    def __init__(self, smsQ):
+        self.sms_q = smsQ
 
-    def listen(self):
-        qMessage = self.qSMS.getMessage()
-        if qMessage is not None:
-            self.process(qMessage)
-
-    def queryDB(self, OrderId):
-        time.sleep(1)
-        print('Querying DB for SMS of order', OrderId)
-        sentSMS = random.randint(0, 1)
-        sentInvoice = random.randint(0, 1)
-        sentMail = 1
-        if sentInvoice == 0:
-            sentMail = random.randint(0, 1)
-        customerName = 'abc'
-        customerSMS = '1234567890'
-        customerEmail = 'abc@def.com'
-        return sentSMS, sentInvoice, customerName, customerSMS
-
-    def updateDB(self, OrderId):
-        time.sleep(1)
-        print('Updated in DB that SMS is sent for order', OrderId)
-
-    def CallSMSServiceProviderAPI(self, MobileNo, Content):
+    def call_sms_service_provider_api(self, MobileNo, Content):
         time.sleep(1)
         r = random.randint(0, 1000)
         if r == 0:
@@ -39,19 +16,16 @@ class SMSListener:
         print('SMS sent')
         return 1
 
-    def process(self, qMessage):
-        orderDetails = json.loads(qMessage)
-        OrderId = orderDetails['OrderId']
-        SentSMS, SentInvoice, CustomerName, CustomerSMS = self.queryDB(OrderId)
-        if SentInvoice == 0:
-            self.qInvoice.enqueue(json.dumps(orderDetails))
-        else:
-            print('Invoice for order', OrderId, 'is sent')
-        if SentSMS == 0:
-            SMSContent = 'Dear ' + CustomerName + ', your Order with order id ' + OrderId + ' has been successfully placed.'
-            SentSMS = self.CallSMSServiceProviderAPI(CustomerSMS, SMSContent)
-        if SentSMS == 0:
-            self.qSMS.enqueue(qMessage)
-        else:
-            self.updateDB(OrderId)
-        self.qSMS.ack(qMessage)
+    def process(self, q_message):
+        sms_details = json.loads(q_message)
+        content = sms_details['SMSContent']
+        sms_to = sms_details['SmsTo']
+        sent_sms = self.call_sms_service_provider_api(sms_to, content)
+        if sent_sms == 0:
+            self.sms_q.enqueue(q_message)
+        self.sms_q.ack(q_message)
+
+    def listen(self):
+        q_message = self.sms_q.getMessage()
+        if q_message is not None:
+            self.process(q_message)

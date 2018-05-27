@@ -8,12 +8,6 @@ class EmailListener:
     def __init__(self, emailQ):
         self.qEmail = emailQ
 
-
-    def listen(self):
-        qMessage = self.qEmail.getMessage()
-        if qMessage is not None:
-            self.process(qMessage)
-
     def CallEmailServiceProviderAPI(self, EmailTo, EmailCc, EmailBcc, Subject, Content, Attachment):
         time.sleep(1)
         r = random.randint(0, 1000)
@@ -54,3 +48,8 @@ class EmailListener:
         elif attachmentFile is not None:
             self.deleteFile(attachmentFile)
         self.qEmail.ack(qMessage)
+
+    def listen(self):
+        qMessage = self.qEmail.getMessage()
+        if qMessage is not None:
+            self.process(qMessage)

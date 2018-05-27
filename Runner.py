@@ -1,3 +1,4 @@
+from order_acknowledgement import order_acknowledgement
 from SMSConsumer import SMSListener
 from InvoiceConsumer import InvoiceListener
 from EmailConsumer import EmailListener
@@ -7,17 +8,19 @@ import json
 
 
 
-
+request_q = MessageQ(deque([]))
 SmsQ = MessageQ(deque([]))
 InvoiceQ = MessageQ(deque([]))
 EmailQ = MessageQ(deque([]))
 
-SmsC = SMSListener(SmsQ, InvoiceQ)
+order_acknowledgement_service = order_acknowledgement(request_q, SmsQ, InvoiceQ)
+SmsC = SMSListener(SmsQ)
 InvoiceC = InvoiceListener(InvoiceQ, EmailQ)
 EmailC = EmailListener(EmailQ)
 
 for i in range(100):
-    SmsQ.enqueue(json.dumps({'OrderId':('meesho' + str(i))}))
+    request_q.enqueue(json.dumps({'OrderId':('meesho' + str(i))}))
+    order_acknowledgement_service.listen()
     SmsC.listen()
     InvoiceC.listen()
     EmailC.listen()

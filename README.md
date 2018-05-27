@@ -6,3 +6,9 @@ If invoice is generated successfully, order mail should have invoice attached, o
 And then the service sends the invoice later when it gets generated.
 
 Created as part of assignment round for Meesho interview.
+
+
+### To-Do
+
+1. Implement the separate services to run concurrently instead of single sequential calls from Runner.py
+2. Clean up code so that it follows Python code conventions
