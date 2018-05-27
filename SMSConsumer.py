@@ -7,7 +7,7 @@ class SMSListener:
     def __init__(self, smsQ):
         self.sms_q = smsQ
 
-    def call_sms_service_provider_api(self, MobileNo, Content):
+    def call_sms_service_provider_api(self, sms_to, content):
         time.sleep(1)
         r = random.randint(0, 1000)
         if r == 0:
@@ -25,7 +25,10 @@ class SMSListener:
             self.sms_q.enqueue(q_message)
         self.sms_q.ack(q_message)
 
-    def listen(self):
-        q_message = self.sms_q.getMessage()
-        if q_message is not None:
-            self.process(q_message)
+    def listen(self, run_event):
+        while run_event.is_set():
+            q_message = self.sms_q.getMessage()
+            if q_message is not None:
+                self.process(q_message)
+            else:
+                time.sleep(1)

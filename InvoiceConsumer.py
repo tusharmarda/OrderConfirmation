@@ -53,7 +53,10 @@ class InvoiceListener:
             self.qInvoice.enqueue(qMessage)
         self.qInvoice.ack(qMessage)
 
-    def listen(self):
-        qMessage = self.qInvoice.getMessage()
-        if qMessage is not None:
-            self.process(qMessage)
+    def listen(self, run_event):
+        while run_event.is_set():
+            qMessage = self.qInvoice.getMessage()
+            if qMessage is not None:
+                self.process(qMessage)
+            else:
+                time.sleep(1)

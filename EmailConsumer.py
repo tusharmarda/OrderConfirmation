@@ -49,7 +49,10 @@ class EmailListener:
             self.deleteFile(attachmentFile)
         self.qEmail.ack(qMessage)
 
-    def listen(self):
-        qMessage = self.qEmail.getMessage()
-        if qMessage is not None:
-            self.process(qMessage)
+    def listen(self, run_event):
+        while run_event.is_set():
+            qMessage = self.qEmail.getMessage()
+            if qMessage is not None:
+                self.process(qMessage)
+            else:
+                time.sleep(1)

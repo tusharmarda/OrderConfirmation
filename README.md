@@ -10,5 +10,6 @@ Created as part of assignment round for Meesho interview.
 
 ### To-Do
 
-1. Implement the separate services to run concurrently instead of single sequential calls from Runner.py
-2. Clean up code so that it follows Python code conventions
+1. Add ability to stop the execution of threads manually
+2. Organize output by multiple threads
+3. Clean up code so that it follows Python code conventions

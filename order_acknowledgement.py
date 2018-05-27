@@ -2,6 +2,7 @@ from MessageQ import MessageQ
 import time
 import json
 import random
+import threading
 
 class order_acknowledgement:
     def __init__(self, requestQ, smsQ, invoiceQ):
@@ -11,7 +12,7 @@ class order_acknowledgement:
 
     def query_db(self, OrderId):
         time.sleep(1)
-        print('Querying DB for SMS of order', OrderId)
+        print('Querying DB for acknowledgement of order {}'.format(OrderId))
         sentSMS = random.randint(0, 1)
         sentInvoice = random.randint(0, 1)
         customerName = 'abc'
@@ -39,7 +40,10 @@ class order_acknowledgement:
             self.update_db(OrderId)
         self.qRequest.ack(q_message)
 
-    def listen(self):
-        qMessage = self.qRequest.getMessage()
-        if qMessage is not None:
-            self.process(qMessage)
+    def listen(self, run_event):
+        while run_event.is_set():
+            qMessage = self.qRequest.getMessage()
+            if qMessage is not None:
+                self.process(qMessage)
+            else:
+                time.sleep(1)
