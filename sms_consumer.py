@@ -1,9 +1,13 @@
-from MessageQ import MessageQ
 import time
 import json
 import random
 
+from messageq import MessageQ
+
 class SMSListener:
+    """This consumer takes SMS objects from the queue and
+    makes external api calls to send the SMS.
+    """
     def __init__(self, smsQ):
         self.sms_q = smsQ
 
@@ -27,7 +31,7 @@ class SMSListener:
 
     def listen(self, run_event):
         while run_event.is_set():
-            q_message = self.sms_q.getMessage()
+            q_message = self.sms_q.get_message()
             if q_message is not None:
                 self.process(q_message)
             else:

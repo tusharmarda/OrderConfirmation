@@ -12,4 +12,4 @@ Created as part of assignment round for Meesho interview.
 
 1. Add ability to stop the execution of threads manually
 2. Organize output by multiple threads
-3. Clean up code so that it follows Python code conventions
+3. Complete documentation in files

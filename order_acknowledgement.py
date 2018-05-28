@@ -1,49 +1,49 @@
-from MessageQ import MessageQ
 import time
 import json
 import random
-import threading
 
-class order_acknowledgement:
-    def __init__(self, requestQ, smsQ, invoiceQ):
-        self.qRequest = requestQ
-        self.qSMS = smsQ
-        self.qInvoice = invoiceQ
+from messageq import MessageQ
 
-    def query_db(self, OrderId):
+class OrderAcknowledgement:
+    def __init__(self, q_request, q_sms, q_invoice):
+        self.q_request = q_request
+        self.q_sms = q_sms
+        self.q_invoice = q_invoice
+
+    def query_db(self, order_id):
         time.sleep(1)
-        print('Querying DB for acknowledgement of order {}'.format(OrderId))
-        sentSMS = random.randint(0, 1)
-        sentInvoice = random.randint(0, 1)
-        customerName = 'abc'
-        customerSMS = '1234567890'
-        customerEmail = 'abc@def.com'
-        return sentSMS, sentInvoice, customerName, customerSMS
+        print('Querying DB for acknowledgement of order {}'.format(order_id))
+        sent_sms = random.randint(0, 1)
+        sent_invoice = random.randint(0, 1)
+        customer_name = 'abc'
+        customer_sms = '1234567890'
+        return sent_sms, sent_invoice, customer_name, customer_sms
 
-    def update_db(self, OrderId):
+    def update_db(self, order_id):
         time.sleep(1)
-        print('Updated in DB that SMS is sent for order', OrderId)
+        print('Updated in DB that SMS is sent for order', order_id)
 
     def process(self, q_message):
-        orderDetails = json.loads(q_message)
-        OrderId = orderDetails['OrderId']
-        SentSMS, SentInvoice, CustomerName, CustomerSMS = self.query_db(OrderId)
-        if SentInvoice == 0:
-            self.qInvoice.enqueue(json.dumps(orderDetails))
+        order_details = json.loads(q_message)
+        order_id = order_details['OrderId']
+        sent_sms, sent_invoice, customer_name, customer_sms = self.query_db(order_id)
+        if sent_invoice == 0:
+            self.q_invoice.enqueue(json.dumps(order_details))
         else:
-            print('Invoice for order', OrderId, 'is sent')
-        if SentSMS == 0:
-            SMSContent = 'Dear {}, your Order with order id {} has been successfully placed.'.format(CustomerName, OrderId)
-            sms_message = {'SmsTo': CustomerSMS, 'SMSContent':SMSContent}
-            self.qSMS.enqueue(json.dumps(sms_message))
-            SentSMS = 1
-            self.update_db(OrderId)
-        self.qRequest.ack(q_message)
+            print('Invoice for order', order_id, 'is sent')
+        if sent_sms == 0:
+            SMSContent = ('Dear {}, your Order with order id {} has been '
+                + 'successfully placed.').format(customer_name, order_id)
+            sms_message = {'SmsTo': customer_sms, 'SMSContent':SMSContent}
+            self.q_sms.enqueue(json.dumps(sms_message))
+            sent_sms = 1
+            self.update_db(order_id)
+        self.q_request.ack(q_message)
 
     def listen(self, run_event):
         while run_event.is_set():
-            qMessage = self.qRequest.getMessage()
-            if qMessage is not None:
-                self.process(qMessage)
+            q_message = self.q_request.get_message()
+            if q_message is not None:
+                self.process(q_message)
             else:
                 time.sleep(1)
