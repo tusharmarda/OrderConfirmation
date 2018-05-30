@@ -1,23 +1,23 @@
-import time
-import random
 import json
+import random
+import time
 from collections import deque
 from threading import Event, Thread
 
+from email_consumer import EmailListener
+from invoice_consumer import InvoiceListener
 from messageq import MessageQ
 from order_acknowledgement import OrderAcknowledgement
 from sms_consumer import SMSListener
-from invoice_consumer import InvoiceListener
-from email_consumer import EmailListener
 
 def push_order_requests(request_q, run_event):
 	"""Send "Order placed" requests to the message queue that our service is listening to."""
-    for i in range(100):
-        request_q.enqueue(json.dumps({'OrderId': ('meesho' + str(i))}))
-        print('Placed order {}.'.format(i))
-        time.sleep(random.randint(0, 5))
-        if not run_event.is_set():
-            break
+	for i in range(100):
+		request_q.enqueue(json.dumps({'OrderId': ('meesho' + str(i))}))
+		print('Placed order {}.'.format(i))
+		time.sleep(random.randint(0, 500) / 100)
+		if not run_event.is_set():
+			break
 
 def run(request_q, order_acknowledgement_service, sms_consumer, 
 		invoice_consumer, email_consumer, interrupt_stop):

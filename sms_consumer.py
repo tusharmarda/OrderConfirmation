@@ -1,35 +1,42 @@
-import time
 import json
 import random
+import time
 
 from messageq import MessageQ
 
 class SMSListener:
     """This consumer takes SMS objects from the queue and
     makes external api calls to send the SMS.
+    If unable to do this successfully, it enqueues the same
+    message again to process later.
     """
     def __init__(self, smsQ):
+        """Initialize listener with a message queue."""
         self.sms_q = smsQ
 
-    def call_sms_service_provider_api(self, sms_to, content):
+    def call_sms_service_provider_api(self, sms_to, content, sms_id):
+        """Call the API of the external service that sends emails."""
         time.sleep(1)
         r = random.randint(0, 1000)
         if r == 0:
-            print('SMS failed')
-            return 0
-        print('SMS sent')
-        return 1
+            print('Sending SMS {} failed'.format(sms_id))
+            return False
+        print('SMS {} sent'.format(sms_id))
+        return True
 
     def process(self, q_message):
+        """Process the json message taken from the queue to send sms."""
         sms_details = json.loads(q_message)
-        content = sms_details['SMSContent']
+        content = sms_details['SmsContent']
         sms_to = sms_details['SmsTo']
-        sent_sms = self.call_sms_service_provider_api(sms_to, content)
-        if sent_sms == 0:
+        sms_id = sms_details['SmsId']
+        sent_sms = self.call_sms_service_provider_api(sms_to, content, sms_id)
+        if not sent_sms:
             self.sms_q.enqueue(q_message)
         self.sms_q.ack(q_message)
 
     def listen(self, run_event):
+        """Keep polling the message queue endlessly and process any received messages."""
         while run_event.is_set():
             q_message = self.sms_q.get_message()
             if q_message is not None:
