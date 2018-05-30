@@ -18,6 +18,7 @@ class InvoiceListener:
         """
         self.q_invoice = q_invoice
         self.q_email = q_email
+        self.consumer_id = 0
 
     def query_db(self, order_id):
         """Query the database to get the details of the order.
@@ -42,7 +43,7 @@ class InvoiceListener:
         If unable to create invoice, return None.
         """
         time.sleep(3)
-        invoice_details_path = 'Path of Invoice File created'
+        invoice_details_path = 'Path/to/invoice/{}.pdf'.format(invoice_details['Order No'])
         r = random.randint(0, 1000)
         if r == 0:
             return None
@@ -84,13 +85,15 @@ class InvoiceListener:
         if not sent_invoice:
             order_details[constants.SEND_PLACEHOLDER] = send_placeholder
             self.q_invoice.enqueue(json.dumps(order_details))
-        self.q_invoice.ack(q_message)
+        self.q_invoice.ack(q_message, self.consumer_id)
 
     def listen(self, run_event):
         """Keep polling the message queue endlessly and process any received messages."""
+        self.consumer_id = self.q_invoice.register()
         while run_event.is_set():
-            q_message = self.q_invoice.get_message()
+            q_message = self.q_invoice.get_message(self.consumer_id)
             if q_message is not None:
                 self.process(q_message)
             else:
                 time.sleep(1)
+        self.q_invoice.deregister(self.consumer_id)

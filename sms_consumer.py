@@ -14,6 +14,7 @@ class SMSListener:
     def __init__(self, smsQ):
         """Initialize listener with a message queue."""
         self.sms_q = smsQ
+        self.consumer_id = 0
 
     def call_sms_service_provider_api(self, sms_to, content, sms_id):
         """Call the API of the external service that sends emails."""
@@ -34,13 +35,15 @@ class SMSListener:
         sent_sms = self.call_sms_service_provider_api(sms_to, content, sms_id)
         if not sent_sms:
             self.sms_q.enqueue(q_message)
-        self.sms_q.ack(q_message)
+        self.sms_q.ack(q_message, self.consumer_id)
 
     def listen(self, run_event):
         """Keep polling the message queue endlessly and process any received messages."""
+        self.consumer_id = self.sms_q.register()
         while run_event.is_set():
-            q_message = self.sms_q.get_message()
+            q_message = self.sms_q.get_message(self.consumer_id)
             if q_message is not None:
                 self.process(q_message)
             else:
                 time.sleep(1)
+        self.sms_q.deregister(self.consumer_id)

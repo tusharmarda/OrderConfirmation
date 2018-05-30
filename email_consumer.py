@@ -14,6 +14,7 @@ class EmailListener:
     def __init__(self, email_q):
         """Initialize listener with a message queue."""
         self.email_q = email_q
+        self.consumer_id = 0
 
     def call_email_service_provider_api(
             self, email_to, email_cc, email_bcc,
@@ -27,16 +28,16 @@ class EmailListener:
         print('Email {} sent'.format(email_id))
         return True
 
-    def get_attachment(self, attachment):
+    def get_attachment(self, attachment_file):
         """Create a local copy of the Attachment files."""
         time.sleep(0.2)
-        print('Attachment file acquired')
-        return 'Attachment file'
+        print('Attachment file "{}" acquired'.format(attachment_file))
+        return attachment_file
 
     def delete_file(self, attachment_file):
         """Delete the copy of attachment file that was used to send api call."""
         time.sleep(0.2)
-        print('Attachment file deleted')
+        print('Attachment file "{}" deleted'.format(attachment_file))
 
     def process(self, q_message):
         """Process the json message taken from the queue to send mail."""
@@ -63,13 +64,15 @@ class EmailListener:
             self.email_q.enqueue(q_message)
         elif attachment_file is not None:
             self.delete_file(attachment_file)
-        self.email_q.ack(q_message)
+        self.email_q.ack(q_message, self.consumer_id)
 
     def listen(self, run_event):
         """Keep polling the message queue endlessly and process any received messages."""
+        self.consumer_id = self.email_q.register()
         while run_event.is_set():
-            q_message = self.email_q.get_message()
+            q_message = self.email_q.get_message(self.consumer_id)
             if q_message is not None:
                 self.process(q_message)
             else:
                 time.sleep(1)
+        self.email_q.deregister(self.consumer_id)

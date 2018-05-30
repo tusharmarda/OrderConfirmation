@@ -17,6 +17,7 @@ class OrderAcknowledgement:
         self.q_request = q_request
         self.q_sms = q_sms
         self.q_invoice = q_invoice
+        self.consumer_id = 0
 
     def query_db(self, order_id):
         """Query the database to get the name and SMS number of the customer,
@@ -47,15 +48,17 @@ class OrderAcknowledgement:
             }
             self.q_sms.enqueue(json.dumps(sms_message))
 
-            self.q_request.ack(q_message)
+            self.q_request.ack(q_message, self.consumer_id)
         except:
             print('Unable to send acknowledgement for order id {}. Will try again.'.format(order_id))
 
     def listen(self, run_event):
         """Keep polling the message queue endlessly and process any received messages."""
+        self.consumer_id = self.q_request.register()
         while run_event.is_set():
-            q_message = self.q_request.get_message()
+            q_message = self.q_request.get_message(self.consumer_id)
             if q_message is not None:
                 self.process(q_message)
             else:
                 time.sleep(1)
+        self.q_request.deregister(self.consumer_id)

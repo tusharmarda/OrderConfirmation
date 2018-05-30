@@ -7,9 +7,11 @@ And then the service sends the invoice later when it gets generated.
 
 Created as part of assignment round for Meesho interview.
 
+## Features
+1. It has four separate stateless services that run independent of each other. The SMS and Email microservices can be re-used for other purposes, like sending promotional messages.
+2. A dummy Message Queue class has been implemented that supports multiple listeners. We can tweak the numbers in runner.py to simulate multiple servers running the same service concurrently, and see the increase in efficiency.
+
 
 ### To-Do
 
-1. Organize output by multiple threads
-2. Improve MessageQ to be able to register multiple listeners at once
-3. Refactor logging to a separate module
+1. Refactor logging to a separate module
