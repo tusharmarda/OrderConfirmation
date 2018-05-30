@@ -2,6 +2,7 @@ import json
 import random
 import time
 
+import string_constants as constants
 from messageq import MessageQ
 
 class InvoiceListener:
@@ -50,22 +51,25 @@ class InvoiceListener:
     def process(self, q_message):
         """Process the json message taken from the queue to create invoice and send mail."""
         order_details = json.loads(q_message)
-        order_id = order_details['OrderId']
+        order_id = order_details[constants.ORDER_ID]
         send_placeholder = False
-        if 'SendPlaceHolder' in order_details:
-            send_placeholder = order_details['SendPlaceHolder']
+        if constants.SEND_PLACEHOLDER in order_details:
+            send_placeholder = order_details[constants.SEND_PLACEHOLDER]
             
         customer_name, customer_email, invoice_details, order_status = self.query_db(order_id)
         invoice = self.try_create_invoice(invoice_details)
-        email_message = {'EmailTo': customer_email, 'Subject': 'Your order with Meesho', 'EmailId': order_id}
+        email_message = {
+            constants.EMAIL_TO: customer_email,
+            constants.EMAIL_SUBJECT: 'Your order with Meesho',
+            constants.EMAIL_ID: order_id}
         mail_content = 'Dear {}, your order with order id {} is {}.'.format(customer_name, order_id, order_status)
         if invoice is None:
             mail_content += ' Your invoice will be sent in a separate mail.'
-            email_message['EmailId'] += '_NoInvoice'
+            email_message[constants.EMAIL_ID] += '_NoInvoice'
         else:
             mail_content += ' Please find your invoice attached to this mail.'
-            email_message['Attachment'] = invoice
-        email_message['Content'] = mail_content
+            email_message[constants.EMAIL_ATTACHMENTS] = invoice
+        email_message[constants.EMAIL_CONTENT] = mail_content
 
         sent_invoice = False
         if invoice is not None or send_placeholder:
@@ -76,9 +80,9 @@ class InvoiceListener:
                 print('Invoice sent for order id {}.'.format(order_id))
             else:
                 print('Placeholder mail sent for order id {}.'.format(order_id))
-                
+
         if not sent_invoice:
-            order_details['SendPlaceHolder'] = send_placeholder
+            order_details[constants.SEND_PLACEHOLDER] = send_placeholder
             self.q_invoice.enqueue(json.dumps(order_details))
         self.q_invoice.ack(q_message)
 

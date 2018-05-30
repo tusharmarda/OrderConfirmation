@@ -2,6 +2,7 @@ import json
 import random
 import time
 
+import string_constants as constants
 from messageq import MessageQ
 
 class SMSListener:
@@ -27,9 +28,9 @@ class SMSListener:
     def process(self, q_message):
         """Process the json message taken from the queue to send sms."""
         sms_details = json.loads(q_message)
-        content = sms_details['SmsContent']
-        sms_to = sms_details['SmsTo']
-        sms_id = sms_details['SmsId']
+        content = sms_details[constants.SMS_CONTENT]
+        sms_to = sms_details[constants.SMS_TO]
+        sms_id = sms_details[constants.SMS_ID]
         sent_sms = self.call_sms_service_provider_api(sms_to, content, sms_id)
         if not sent_sms:
             self.sms_q.enqueue(q_message)

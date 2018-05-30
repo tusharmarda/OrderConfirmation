@@ -2,6 +2,7 @@ import json
 import random
 import time
 
+import string_constants as constants
 from messageq import MessageQ
 
 class EmailListener:
@@ -40,19 +41,19 @@ class EmailListener:
     def process(self, q_message):
         """Process the json message taken from the queue to send mail."""
         email_details = json.loads(q_message)
-        subject = email_details['Subject']
-        content = email_details['Content']
-        email_to = email_details['EmailTo']
-        email_id = email_details['EmailId']
+        subject = email_details[constants.EMAIL_SUBJECT]
+        content = email_details[constants.EMAIL_CONTENT]
+        email_to = email_details[constants.EMAIL_TO]
+        email_id = email_details[constants.EMAIL_ID]
         email_cc = ''
-        if 'EmailCc' in email_details:
-            email_cc = email_details['EmailCc']
+        if constants.EMAIL_CC in email_details:
+            email_cc = email_details[constants.EMAIL_CC]
         email_bcc = ''
-        if 'EmailBcc' in email_details:
-            email_bcc = email_details['EmailBcc']
+        if constants.EMAIL_BCC in email_details:
+            email_bcc = email_details[constants.EMAIL_BCC]
         attachment_file = None
-        if 'Attachment' in email_details:
-            attachment = email_details['Attachment']
+        if constants.EMAIL_ATTACHMENTS in email_details:
+            attachment = email_details[constants.EMAIL_ATTACHMENTS]
             if attachment is not None:
                 attachment_file = self.get_attachment(attachment)
         sent_email = self.call_email_service_provider_api(

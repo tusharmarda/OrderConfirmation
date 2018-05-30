@@ -2,6 +2,7 @@ import json
 import random
 import time
 
+import string_constants as constants
 from messageq import MessageQ
 
 class OrderAcknowledgement:
@@ -30,16 +31,20 @@ class OrderAcknowledgement:
     def process(self, q_message):
         """Process the json message taken from the queue to send requests to send invoice and sms."""
         order_details = json.loads(q_message)
-        order_id = order_details['OrderId']
+        order_id = order_details[constants.ORDER_ID]
 
         try:
-            order_details['SendPlaceHolder'] = True
+            order_details[constants.SEND_PLACEHOLDER] = True
             self.q_invoice.enqueue(json.dumps(order_details))
 
             customer_name, customer_sms = self.query_db(order_id)
             sms_content = ('Dear {}, your Order with order id {} has been '
                 + 'successfully placed.').format(customer_name, order_id)
-            sms_message = {'SmsTo': customer_sms, 'SmsContent': sms_content, 'SmsId': order_id}
+            sms_message = {
+                constants.SMS_TO: customer_sms,
+                constants.SMS_CONTENT: sms_content,
+                constants.SMS_ID: order_id
+            }
             self.q_sms.enqueue(json.dumps(sms_message))
 
             self.q_request.ack(q_message)

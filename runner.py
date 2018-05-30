@@ -4,6 +4,7 @@ import time
 from collections import deque
 from threading import Event, Thread
 
+import string_constants as constants
 from email_consumer import EmailListener
 from invoice_consumer import InvoiceListener
 from messageq import MessageQ
@@ -13,7 +14,7 @@ from sms_consumer import SMSListener
 def push_order_requests(request_q, run_event):
 	"""Send "Order placed" requests to the message queue that our service is listening to."""
 	for i in range(100):
-		request_q.enqueue(json.dumps({'OrderId': ('meesho' + str(i))}))
+		request_q.enqueue(json.dumps({constants.ORDER_ID: ('meesho' + str(i))}))
 		print('Placed order {}.'.format(i))
 		time.sleep(random.randint(0, 500) / 100)
 		if not run_event.is_set():

@@ -12,5 +12,4 @@ Created as part of assignment round for Meesho interview.
 
 1. Organize output by multiple threads
 2. Improve MessageQ to be able to register multiple listeners at once
-3. Refactor string constants to a separate file
-4. Refactor logging to a separate module
+3. Refactor logging to a separate module
